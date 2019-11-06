@@ -1,0 +1,3 @@
+config:
+  aws_region: us-east-1
+  deployment_bucket: ae-serverless-apps-np

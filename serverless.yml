@@ -1,0 +1,78 @@
+service: my-serverless-app
+
+plugins:
+  - serverless-deployment-bucket
+  - serverless-plugin-resource-tagging
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, file(./config/${self:provider.stage}.yaml):config.aws_region}
+  stackName: ${self:service}
+  apiName: ${self:service}
+  deploymentPrefix: ${self:provider.region}
+  deploymentBucket:
+    name: ${file(./config/${self:provider.stage}.yaml):config.deployment_bucket}
+  tags:
+    app: ${self:service}
+  stackTags:
+    Name: ${self:service}
+    app: "my_app"
+  environment:
+    stage: ${self:provider.stage}
+
+functions:
+  hello:
+    handler: lambda/hello.hello
+    produces: application/json
+    events:
+      - http:
+          path: hello
+          method: get
+          cors: true
+          integration: lambda
+    package:
+      include: 
+        - ./lambda/hello.js
+      exclude:
+        - ./**
+      individually: true
+  goodbye:
+    handler: lambda/goodbye.goodbye
+    produces: application/json
+    events:
+      - http:
+          path: goodbye
+          method: get
+          cors: true
+          integration: lambda
+    package:
+      include: 
+        - ./lambda/goodbye.js
+      exclude:
+        - ./**
+      individually: true
+  date:
+    handler: lambda/date.date
+    produces: application/json
+    events:
+      - http:
+          path: date
+          method: get
+          cors: true
+          integration: lambda
+    layers:
+      - {Ref: CommonLibsLambdaLayer}
+    package:
+      include: 
+        - ./lambda/date.js
+      exclude:
+        - ./**
+      individually: true
+
+layers:
+  commonLibs:
+    path: layer
+    compatibleRuntimes:
+      - nodejs10.x
